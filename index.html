@@ -1,0 +1,715 @@
+html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSubmit - Platform Pengunggahan Tugas Sekolah</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom smooth scroll and transitions */
+        html {
+            scroll-behavior: smooth;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col justify-between">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Logo & Brand -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-400 flex items-center justify-center text-white shadow-md">
+                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold bg-gradient-to-r from-brand-700 to-indigo-600 bg-clip-text text-transparent leading-tight">EduSubmit</h1>
+                    <p class="text-xs text-gray-500 font-medium">Portal Tugas Sekolah</p>
+                </div>
+            </div>
+
+            <!-- Role Switcher & User Profile Preview -->
+            <div class="flex items-center space-x-4">
+                <div class="bg-gray-100 p-1 rounded-xl flex items-center border border-gray-200">
+                    <button onclick="switchRole('siswa')" id="btn-role-siswa" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center space-x-2 bg-white text-brand-600 shadow-sm">
+                        <i class="fa-solid fa-user-graduate"></i>
+                        <span>Siswa</span>
+                    </button>
+                    <button onclick="switchRole('guru')" id="btn-role-guru" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center space-x-2 text-gray-600 hover:text-brand-600">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                        <span>Guru</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ================= SISWA DASHBOARD ================= -->
+        <div id="view-siswa" class="space-y-6 fade-in">
+            <!-- Welcome Banner -->
+            <div class="bg-gradient-to-r from-brand-600 to-indigo-700 rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute right-0 bottom-0 opacity-10 translate-x-10 translate-y-10">
+                    <i class="fa-solid fa-book-open text-9xl"></i>
+                </div>
+                <div class="relative z-10 max-w-2xl">
+                    <span class="bg-white/20 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider inline-block mb-3">Portal Siswa</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold mb-2">Halo, Selamat Belajar!</h2>
+                    <p class="text-brand-100 text-sm sm:text-base">Lihat daftar tugas dari guru, unggah pekerjaan rumah tepat waktu, dan periksa nilai serta catatan umpan balik di sini.</p>
+                </div>
+            </div>
+
+            <!-- Stats & Filter Bar -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase">Total Tugas Aktif</p>
+                        <h3 id="stat-siswa-total" class="text-2xl font-bold text-gray-800 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase">Sudah Dikumpul</p>
+                        <h3 id="stat-siswa-submitted" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase">Belum Dikerjakan</p>
+                        <h3 id="stat-siswa-pending" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task List Section -->
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Daftar Tugas Sekolah</h3>
+                        <p class="text-xs text-gray-500">Pilih tugas yang ingin dikerjakan atau periksa status penilaian.</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                <i class="fa-solid fa-search text-xs"></i>
+                            </span>
+                            <input type="text" id="search-siswa-input" onkeyup="renderSiswaTasks()" placeholder="Cari tugas / mapel..." class="pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 w-full sm:w-64">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-5">
+                    <div id="siswa-task-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Dynamic rendered list -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= GURU DASHBOARD ================= -->
+        <div id="view-guru" class="space-y-6 hidden fade-in">
+            <!-- Welcome Banner -->
+            <div class="bg-gradient-to-r from-slate-800 to-indigo-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="max-w-xl">
+                    <span class="bg-white/10 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider inline-block mb-3">Portal Guru</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold mb-2">Panel Manajemen Tugas</h2>
+                    <p class="text-slate-300 text-sm sm:text-base">Buat tugas baru untuk siswa, kelola tenggat waktu, periksa pengumpulan tugas, dan berikan nilai serta umpan balik.</p>
+                </div>
+                <button onclick="openModal('modal-create-task')" class="bg-brand-500 hover:bg-brand-600 text-white font-medium px-5 py-3 rounded-xl shadow-lg transition duration-200 flex items-center space-x-2 shrink-0">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Buat Tugas Baru</span>
+                </button>
+            </div>
+
+            <!-- Stats & Quick View -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase">Tugas Dibuat</p>
+                        <h3 id="stat-guru-tasks" class="text-2xl font-bold text-gray-800 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-file-pen"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase">Total Pengumpulan</p>
+                        <h3 id="stat-guru-submissions" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-inbox"></i>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase">Belum Dinilai</p>
+                        <h3 id="stat-guru-unrated" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teacher Task Table/List -->
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Daftar Tugas yang Dibuat</h3>
+                        <p class="text-xs text-gray-500">Kelola atau hapus tugas, serta lihat pengumpulan dari siswa.</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-400 text-xs font-semibold uppercase tracking-wider border-b border-gray-100">
+                                <th class="py-3 px-5">Mata Pelajaran & Judul</th>
+                                <th class="py-3 px-5">Deadline</th>
+                                <th class="py-3 px-5">Pengumpulan</th>
+                                <th class="py-3 px-5 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="guru-task-list" class="divide-y divide-gray-100 text-sm text-gray-700">
+                            <!-- Rendered by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-gray-200 mt-12 py-6 text-center text-xs text-gray-500">
+        <p>&copy; 2026 EduSubmit. All rights reserved. Platform Pengunggahan Tugas Sekolah Modern.</p>
+    </footer>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- Modal Buat Tugas (Guru) -->
+    <div id="modal-create-task" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden fade-in">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                <h3 class="font-bold text-gray-800 text-base"><i class="fa-solid fa-plus-circle text-brand-600 mr-2"></i>Buat Tugas Baru</h3>
+                <button onclick="closeModal('modal-create-task')" class="text-gray-400 hover:text-gray-600 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-create-task" onsubmit="handleCreateTask(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Mata Pelajaran</label>
+                    <input type="text" id="task-subject" required placeholder="Contoh: Matematika Lanjut" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Judul Tugas</label>
+                    <input type="text" id="task-title" required placeholder="Contoh: Latihan Soal Turunan Fungsi Aljabar" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Deskripsi & Instruksi</label>
+                    <textarea id="task-desc" rows="3" required placeholder="Tuliskan petunjuk pengerjaan tugas di sini..." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tenggat Waktu (Deadline)</label>
+                    <input type="datetime-local" id="task-deadline" required class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Lampiran File / Tautan Materi (Opsional)</label>
+                    <input type="text" id="task-attachment" placeholder="Nama file atau URL referensi (misal: Modul_Bab3.pdf)" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeModal('modal-create-task')" class="px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-medium shadow-md">Simpan Tugas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Upload Tugas (Siswa) -->
+    <div id="modal-upload-task" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden fade-in">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                <h3 class="font-bold text-gray-800 text-base"><i class="fa-solid fa-cloud-arrow-up text-brand-600 mr-2"></i>Kumpulkan Tugas</h3>
+                <button onclick="closeModal('modal-upload-task')" class="text-gray-400 hover:text-gray-600 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="form-upload-task" onsubmit="handleUploadTask(event)" class="p-6 space-y-4">
+                <input type="hidden" id="upload-task-id">
+                <div class="bg-brand-50 border border-brand-100 p-3.5 rounded-xl">
+                    <p class="text-xs font-semibold text-brand-700 uppercase">Mata Pelajaran & Judul</p>
+                    <p id="upload-task-title-display" class="text-sm font-bold text-gray-800 mt-0.5">-</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nama Lengkap Siswa</label>
+                    <input type="text" id="student-name" required placeholder="Contoh: Budi Santoso (Kelas XI IPA 2)" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Nama File Tugas / Link Dokumen</label>
+                    <input type="text" id="student-file" required placeholder="Contoh: Tugas_Matematika_Budi.pdf atau link Google Drive" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Catatan Tambahan untuk Guru (Opsional)</label>
+                    <textarea id="student-notes" rows="2" placeholder="Tuliskan catatan singkat jika ada..." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeModal('modal-upload-task')" class="px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium shadow-md">Kirim Tugas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Lihat & Nilai Pengumpulan (Guru) -->
+    <div id="modal-view-submissions" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden fade-in max-h-[90vh] flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                <div>
+                    <h3 class="font-bold text-gray-800 text-base"><i class="fa-solid fa-inbox text-brand-600 mr-2"></i>Daftar Pengumpulan Siswa</h3>
+                    <p id="grading-modal-subtitle" class="text-xs text-gray-500">Memuat data pengumpulan tugas...</p>
+                </div>
+                <button onclick="closeModal('modal-view-submissions')" class="text-gray-400 hover:text-gray-600 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4 flex-grow" id="submissions-list-container">
+                <!-- Rendered dynamically -->
+            </div>
+            <div class="px-6 py-3 border-t border-gray-100 bg-gray-50 flex justify-end">
+                <button type="button" onclick="closeModal('modal-view-submissions')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl text-sm font-medium">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- DATA STATE & LOCALSTORAGE ---
+        let tasks = JSON.parse(localStorage.getItem('edusubmit_tasks')) || [
+            {
+                id: 'task-1',
+                subject: 'Matematika Peminatan',
+                title: 'Latihan Soal Limit Fungsi Trigonometri',
+                description: 'Kerjakan soal latihan halaman 45 nomor 1 sampai 10 di buku catatan, lalu kumpulkan dalam bentuk PDF atau foto yang jelas.',
+                deadline: '2026-04-20T23:59',
+                attachment: 'Modul_Limit_Trigonometri.pdf',
+                createdAt: '2026-04-10'
+            },
+            {
+                id: 'task-2',
+                subject: 'Bahasa Indonesia',
+                title: 'Menulis Teks Editorial Opini',
+                description: 'Buatlah teks editorial dengan tema pendidikan karakter di era digital minimal 3 paragraf.',
+                deadline: '2026-04-25T12:00',
+                attachment: 'Panduan_Editorial.docx',
+                createdAt: '2026-04-12'
+            }
+        ];
+
+        let submissions = JSON.parse(localStorage.getItem('edusubmit_submissions')) || [
+            {
+                id: 'sub-1',
+                taskId: 'task-1',
+                studentName: 'Ahmad Fauzi (XI IPA 1)',
+                file: 'Tugas_Limit_Ahmad.pdf',
+                notes: 'Maaf Bu, terlambat sedikit karena kendala jaringan.',
+                submittedAt: '2026-04-14 14:30',
+                score: 85,
+                feedback: 'Pengerjaan sudah bagus dan runtut. Tingkatkan ketelitian pada nomor 7.'
+            }
+        ];
+
+        let currentRole = 'siswa'; // default role
+
+        function saveToLocalStorage() {
+            localStorage.setItem('edusubmit_tasks', JSON.stringify(tasks));
+            localStorage.setItem('edusubmit_submissions', JSON.stringify(submissions));
+        }
+
+        // --- TOAST NOTIFICATION ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgColor = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-rose-600' : 'bg-brand-600');
+            const icon = type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-info');
+
+            toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-lg flex items-center space-x-3 text-sm font-medium pointer-events-auto fade-in transition-all duration-300`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-base"></i><span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- ROLE SWITCHER ---
+        function switchRole(role) {
+            currentRole = role;
+            const btnSiswa = document.getElementById('btn-role-siswa');
+            const btnGuru = document.getElementById('btn-role-guru');
+            const viewSiswa = document.getElementById('view-siswa');
+            const viewGuru = document.getElementById('view-guru');
+
+            if (role === 'siswa') {
+                btnSiswa.className = "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center space-x-2 bg-white text-brand-600 shadow-sm";
+                btnGuru.className = "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center space-x-2 text-gray-600 hover:text-brand-600";
+                viewSiswa.classList.remove('hidden');
+                viewGuru.classList.add('hidden');
+                renderSiswaTasks();
+            } else {
+                btnGuru.className = "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center space-x-2 bg-white text-brand-600 shadow-sm";
+                btnSiswa.className = "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center space-x-2 text-gray-600 hover:text-brand-600";
+                viewGuru.classList.remove('hidden');
+                viewSiswa.classList.add('hidden');
+                renderGuruTasks();
+            }
+        }
+
+        // --- MODAL UTILS ---
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // --- GURU ACTIONS ---
+        function handleCreateTask(e) {
+            e.preventDefault();
+            const subject = document.getElementById('task-subject').value;
+            const title = document.getElementById('task-title').value;
+            const description = document.getElementById('task-desc').value;
+            const deadline = document.getElementById('task-deadline').value;
+            const attachment = document.getElementById('task-attachment').value || '-';
+
+            const newTask = {
+                id: 'task-' + Date.now(),
+                subject,
+                title,
+                description,
+                deadline,
+                attachment,
+                createdAt: new Date().toISOString().split('T')[0]
+            };
+
+            tasks.unshift(newTask);
+            saveToLocalStorage();
+            closeModal('modal-create-task');
+            document.getElementById('form-create-task').reset();
+            renderGuruTasks();
+            renderSiswaTasks();
+            showToast('Tugas baru berhasil dibuat!');
+        }
+
+        function deleteTeacherTask(taskId) {
+            if (confirm('Apakah Anda yakin ingin menghapus tugas ini?')) {
+                tasks = tasks.filter(t => t.id !== taskId);
+                submissions = submissions.filter(s => s.taskId !== taskId);
+                saveToLocalStorage();
+                renderGuruTasks();
+                renderSiswaTasks();
+                showToast('Tugas berhasil dihapus.', 'info');
+            }
+        }
+
+        function renderGuruTasks() {
+            const listEl = document.getElementById('guru-task-list');
+            const statTasks = document.getElementById('stat-guru-tasks');
+            const statSubs = document.getElementById('stat-guru-submissions');
+            const statUnrated = document.getElementById('stat-guru-unrated');
+
+            statTasks.innerText = tasks.length;
+            statSubs.innerText = submissions.length;
+            const unratedCount = submissions.filter(s => s.score === null || s.score === undefined).length;
+            statUnrated.innerText = unratedCount;
+
+            if (tasks.length === 0) {
+                listEl.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-gray-400">Belum ada tugas yang dibuat. Klik "Buat Tugas Baru" untuk memulai.</td></tr>`;
+                return;
+            }
+
+            listEl.innerHTML = tasks.map(task => {
+                const taskSubs = submissions.filter(s => s.taskId === task.id);
+                const formattedDeadline = task.deadline ? task.deadline.replace('T', ' Pukul ') : '-';
+                return `
+                    <tr class="hover:bg-gray-50/50 transition">
+                        <td class="py-4 px-5">
+                            <span class="inline-block px-2.5 py-0.5 bg-brand-50 text-brand-700 text-xs font-semibold rounded-md mb-1">${task.subject}</span>
+                            <p class="font-bold text-gray-800">${task.title}</p>
+                            <p class="text-xs text-gray-500 line-clamp-1">${task.description}</p>
+                        </td>
+                        <td class="py-4 px-5 text-xs text-gray-600 font-medium">
+                            <i class="fa-regular fa-clock mr-1 text-gray-400"></i> ${formattedDeadline}
+                        </td>
+                        <td class="py-4 px-5">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${taskSubs.length > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'}">
+                                ${taskSubs.length} Siswa Mengumpulkan
+                            </span>
+                        </td>
+                        <td class="py-4 px-5 text-right space-x-2">
+                            <button onclick="openSubmissionsModal('${task.id}')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-brand-700 text-xs font-semibold rounded-lg transition">
+                                <i class="fa-solid fa-eye mr-1"></i> Nilai (${taskSubs.length})
+                            </button>
+                            <button onclick="deleteTeacherTask('${task.id}')" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition" title="Hapus Tugas">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // --- GRADING / SUBMISSIONS MODAL (GURU) ---
+        let currentGradingTaskId = null;
+        function openSubmissionsModal(taskId) {
+            currentGradingTaskId = taskId;
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            document.getElementById('grading-modal-subtitle').innerText = `${task.subject} - ${task.title}`;
+            renderSubmissionsList();
+            openModal('modal-view-submissions');
+        }
+
+        function renderSubmissionsList() {
+            const container = document.getElementById('submissions-list-container');
+            const taskSubs = submissions.filter(s => s.taskId === currentGradingTaskId);
+
+            if (taskSubs.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 text-gray-400"><i class="fa-solid fa-inbox text-4xl mb-2"></i><p>Belum ada siswa yang mengumpulkan tugas ini.</p></div>`;
+                return;
+            }
+
+            container.innerHTML = taskSubs.map(sub => `
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-200/60 pb-3">
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm sm:text-base">${sub.studentName}</h4>
+                            <p class="text-xs text-gray-500"><i class="fa-regular fa-calendar-check mr-1"></i> Dikumpulkan pada: ${sub.submittedAt}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <a href="#" onclick="showToast('Membuka file: ${sub.file}', 'info'); return false;" class="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-lg shadow-sm flex items-center space-x-1">
+                                <i class="fa-solid fa-file-arrow-down text-brand-600"></i>
+                                <span>${sub.file}</span>
+                            </a>
+                        </div>
+                    </div>
+                    ${sub.notes ? `<div class="text-xs bg-white p-2.5 rounded-lg border border-gray-200 text-gray-600"><strong>Catatan Siswa:</strong> ${sub.notes}</div>` : ''}
+                    
+                    <!-- Grading Input Form -->
+                    <div class="bg-white p-3.5 rounded-xl border border-gray-200 space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Nilai (0-100)</label>
+                                <input type="number" min="0" max="100" id="score-${sub.id}" value="${sub.score !== null && sub.score !== undefined ? sub.score : ''}" placeholder="Nilai" class="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Umpan Balik / Catatan Guru</label>
+                                <input type="text" id="feedback-${sub.id}" value="${sub.feedback || ''}" placeholder="Tuliskan catatan atau masukan..." class="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+                            </div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button onclick="saveGrade('${sub.id}')" class="px-4 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                                <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Penilaian
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function saveGrade(subId) {
+            const scoreInput = document.getElementById(`score-${subId}`).value;
+            const feedbackInput = document.getElementById(`feedback-${subId}`).value;
+
+            const subIndex = submissions.findIndex(s => s.id === subId);
+            if (subIndex !== -1) {
+                submissions[subIndex].score = scoreInput !== '' ? Number(scoreInput) : null;
+                submissions[subIndex].feedback = feedbackInput;
+                saveToLocalStorage();
+                renderGuruTasks();
+                renderSiswaTasks();
+                showToast('Nilai dan umpan balik berhasil disimpan!');
+                renderSubmissionsList();
+            }
+        }
+
+        // --- SISWA ACTIONS ---
+        function renderSiswaTasks() {
+            const listEl = document.getElementById('siswa-task-list');
+            const searchVal = document.getElementById('search-siswa-input').value.toLowerCase();
+            const statTotal = document.getElementById('stat-siswa-total');
+            const statSubmitted = document.getElementById('stat-siswa-submitted');
+            const statPending = document.getElementById('stat-siswa-pending');
+
+            statTotal.innerText = tasks.length;
+            const mySubmissions = submissions; // Mocked single student view or overall
+            const submittedTaskIds = mySubmissions.map(s => s.taskId);
+            
+            const submittedCount = tasks.filter(t => submittedTaskIds.includes(t.id)).length;
+            statSubmitted.innerText = submittedCount;
+            statPending.innerText = tasks.length - submittedCount;
+
+            const filteredTasks = tasks.filter(t => 
+                t.title.toLowerCase().includes(searchVal) || 
+                t.subject.toLowerCase().includes(searchVal) ||
+                t.description.toLowerCase().includes(searchVal)
+            );
+
+            if (filteredTasks.length === 0) {
+                listEl.innerHTML = `<div class="col-span-full py-10 text-center text-gray-400"><i class="fa-solid fa-magnifying-glass text-3xl mb-2"></i><p>Tidak ada tugas yang ditemukan.</p></div>`;
+                return;
+            }
+
+            listEl.innerHTML = filteredTasks.map(task => {
+                const sub = mySubmissions.find(s => s.taskId === task.id);
+                const isSubmitted = !!sub;
+                const formattedDeadline = task.deadline ? task.deadline.replace('T', ' Pukul ') : '-';
+
+                let statusBadge = '';
+                if (!isSubmitted) {
+                    statusBadge = `<span class="px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full flex items-center w-fit gap-1"><i class="fa-regular fa-clock"></i> Belum Dikerjakan</span>`;
+                } else if (sub.score !== null && sub.score !== undefined) {
+                    statusBadge = `<span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full flex items-center w-fit gap-1"><i class="fa-solid fa-circle-check"></i> Sudah Dinilai (Nilai: ${sub.score})</span>`;
+                } else {
+                    statusBadge = `<span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full flex items-center w-fit gap-1"><i class="fa-solid fa-hourglass-half"></i> Menunggu Dinilai</span>`;
+                }
+
+                return `
+                    <div class="bg-gray-50 border border-gray-200 rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:shadow-md transition">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-0.5 bg-brand-50 text-brand-700 text-xs font-semibold rounded-md">${task.subject}</span>
+                                ${statusBadge}
+                            </div>
+                            <h4 class="font-bold text-gray-800 text-base">${task.title}</h4>
+                            <p class="text-xs text-gray-600 leading-relaxed">${task.description}</p>
+                        </div>
+
+                        <div class="space-y-3 pt-3 border-t border-gray-200/60">
+                            <div class="flex items-center justify-between text-xs text-gray-500">
+                                <span><i class="fa-regular fa-calendar-days mr-1 text-gray-400"></i> Deadline: <strong>${formattedDeadline}</strong></span>
+                                ${task.attachment !== '-' ? `<span class="text-brand-600 font-medium cursor-pointer" onclick="showToast('Mengunduh lampiran: ${task.attachment}', 'info')"><i class="fa-solid fa-paperclip mr-1"></i>${task.attachment}</span>` : ''}
+                            </div>
+
+                            ${isSubmitted ? `
+                                <div class="bg-white p-3 rounded-xl border border-gray-200 text-xs space-y-1">
+                                    <p class="font-semibold text-gray-700"><i class="fa-solid fa-check text-emerald-600 mr-1"></i> File Terkirim: <span class="text-brand-600">${sub.file}</span></p>
+                                    ${sub.feedback ? `<p class="text-gray-600 mt-1"><strong>Feedback Guru:</strong> ${sub.feedback}</p>` : '<p class="text-gray-400 italic">Belum ada catatan dari guru.</p>'}
+                                </div>
+                                <button onclick="openUploadModal('${task.id}')" class="w-full py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl text-xs font-semibold transition">
+                                    Kirim Ulang / Perbarui Tugas
+                                </button>
+                            ` : `
+                                <button onclick="openUploadModal('${task.id}')" class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center justify-center space-x-2">
+                                    <i class="fa-solid fa-upload"></i>
+                                    <span>Kumpulkan Tugas</span>
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openUploadModal(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            document.getElementById('upload-task-id').value = taskId;
+            document.getElementById('upload-task-title-display').innerText = `${task.subject} - ${task.title}`;
+            document.getElementById('form-upload-task').reset();
+            openModal('modal-upload-task');
+        }
+
+        function handleUploadTask(e) {
+            e.preventDefault();
+            const taskId = document.getElementById('upload-task-id').value;
+            const studentName = document.getElementById('student-name').value;
+            const file = document.getElementById('student-file').value;
+            const notes = document.getElementById('student-notes').value;
+
+            // Check if already submitted, update or create new
+            const existingIndex = submissions.findIndex(s => s.taskId === taskId && s.studentName.toLowerCase() === studentName.toLowerCase());
+
+            const now = new Date();
+            const timeString = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            if (existingIndex !== -1) {
+                submissions[existingIndex].file = file;
+                submissions[existingIndex].notes = notes;
+                submissions[existingIndex].submittedAt = timeString;
+                // keep score/feedback if re-submitted or reset? Let's keep or reset as needed, keeping is user-friendly.
+            } else {
+                const newSub = {
+                    id: 'sub-' + Date.now(),
+                    taskId,
+                    studentName,
+                    file,
+                    notes,
+                    submittedAt: timeString,
+                    score: null,
+                    feedback: ''
+                };
+                submissions.unshift(newSub);
+            }
+
+            saveToLocalStorage();
+            closeModal('modal-upload-task');
+            renderSiswaTasks();
+            renderGuruTasks();
+            showToast('Tugas berhasil dikumpulkan!');
+        }
+
+        // --- INITIALIZE ON LOAD ---
+        window.onload = function() {
+            renderSiswaTasks();
+            renderGuruTasks();
+        };
+    </script>
+</body>
+</html>
